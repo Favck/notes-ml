@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Конспект по Seaborn: Полное руководство</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --text: #d1d5db;
+      --text-bright: #f9fafb;
+      --accent: #a855f7;
+      --accent-alt: #06b6d4;
+      --code-bg: #030712;
+      --tag-bg: #1f2937;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #fb7185;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      text-align: center;
+      padding: 40px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 30px;
+    }
+    h1 { font-size: 2.4rem; color: var(--text-bright); margin-bottom: 8px; }
+    h2 { font-size: 1.7rem; color: var(--accent); margin: 30px 0 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    h3 { font-size: 1.25rem; color: var(--accent-alt); margin: 24px 0 10px; }
+    h4 { font-size: 1.05rem; color: var(--text-bright); margin: 16px 0 8px; }
+    p { margin-bottom: 12px; }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      background: var(--tag-bg);
+      color: var(--accent-alt);
+      border: 1px solid var(--border);
+      margin: 2px;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      overflow-x: auto;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.9rem;
+      color: #93c5fd;
+      margin: 12px 0;
+      line-height: 1.55;
+    }
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: #f472b6;
+      background: #1f2937;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    ul, ol { margin-left: 22px; margin-bottom: 12px; }
+    li { margin-bottom: 6px; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+      align-items: start;
+    }
+    .plot-figure { margin: 16px 0 22px; }
+    .plot-box {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px 0 6px;
+    }
+    .plot-box img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .plot-figure figcaption {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 0.86rem;
+      line-height: 1.5;
+      margin-top: 6px;
+    }
+    .note, .warning, .tip {
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 16px 0;
+      font-size: 0.95rem;
+    }
+    .note { border-left: 3px solid var(--accent-alt); background: rgba(6,182,212,0.08); }
+    .warning { border-left: 3px solid var(--warning); background: rgba(251,191,36,0.09); }
+    .tip { border-left: 3px solid var(--success); background: rgba(52,211,153,0.08); }
+    .note strong, .warning strong, .tip strong { color: var(--text-bright); }
+    .formula {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 18px;
+      text-align: center;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: var(--text-bright);
+      margin: 14px 0;
+      font-size: 1rem;
+      line-height: 1.9;
+      overflow-x: auto;
+    }
+    .formula sub, .formula sup { font-size: 0.7em; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      font-size: 0.93rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 9px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--tag-bg); color: var(--text-bright); }
+    tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
+    td:first-child { white-space: nowrap; }
+    .param-table td:first-child { color: #93c5fd; }
+    @media (max-width: 640px) {
+      body { padding: 12px; }
+      h1 { font-size: 1.8rem; }
+      h2 { font-size: 1.45rem; }
+      .card { padding: 16px; }
+      table { font-size: 0.85rem; }
+      th, td { padding: 7px 8px; }
+      td:first-child { white-space: normal; }
+    }
+    /* Кнопка возврата к оглавлению */
+  .nav-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-bright);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .nav-back:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateX(-4px);
+    text-decoration: none;
+  }
+
+  /* Верхняя кнопка */
+  .nav-back-top {
+    margin-bottom: 20px;
+  }
+
+  /* Нижняя кнопка */
+  .nav-back-bottom-wrap {
+    text-align: center;
+    margin: 35px 0 20px;
+  }
+  </style>
+</head>
+<body>
+  <div class="container">
+  <!-- Верхняя кнопка "Назад" -->
+  <a href="index.html" class="nav-back nav-back-top">
+    <span>←</span> На главную к конспектам
+  </a>
+
+  <header>
+  <header>
+    <h1>Оцифрованный конспект по Seaborn</h1>
+    <p>Статистическая визуализация данных: 6 ключевых категорий графиков, сетки и реальные примеры</p>
+    <div>
+      <span class="badge">Scatter Plots</span>
+      <span class="badge">Distribution Plots</span>
+      <span class="badge">Categorical Plots</span>
+      <span class="badge">Comparison Plots</span>
+      <span class="badge">Grids</span>
+      <span class="badge">Matrix Plots</span>
+      <span class="badge">13 реальных графиков</span>
+    </div>
+  </header>
+
+  <!-- КОНЦЕПЦИЯ -->
+  <section class="card">
+    <h2>Общие принципы работы Seaborn</h2>
+    <p><strong>Seaborn</strong> — высокоуровневая статистическая библиотека поверх Matplotlib, оптимизированная под работу с датафреймами pandas. Она позволяет строить информативные графики в одну строку, но при этом возвращает обычные объекты Matplotlib, которые можно донастроить.</p>
+
+    <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Данные в «длинном» формате: одна строка — одно наблюдение
+df = sns.load_dataset("tips")  # пример; можно pd.read_csv("tips.csv")
+
+# Базовая схема:
+sns.scatterplot(
+    data=df,
+    x="total_bill",   # имя колонки по оси X
+    y="tip",          # имя колонки по оси Y
+    hue="sex",        # цвет по категории
+    palette="Set2"    # палитра
+)
+
+plt.show()</code></pre>
+
+    <p>Перед вызовом функций Seaborn размер и качество изображения настраиваются через Matplotlib: <code>plt.figure(figsize=(10, 5), dpi=150)</code>. Для «фигурных» функций (<code>displot</code>, <code>catplot</code>, <code>jointplot</code>, <code>pairplot</code>) размер задаётся параметрами <code>height</code> и <code>aspect</code>.</p>
+
+    <h3>Axes-level и figure-level функции</h3>
+    <table>
+      <thead>
+        <tr><th>Тип</th><th>Примеры</th><th>Как работает</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Axes-level</td>
+          <td><code>scatterplot</code>, <code>histplot</code>, <code>kdeplot</code>, <code>boxplot</code>, <code>barplot</code>, <code>heatmap</code></td>
+          <td>Рисует на конкретных осях. Принимает <code>ax=</code>, легко комбинируется в <code>subplots</code>. Размер задаётся через <code>plt.figure(figsize=...)</code>.</td>
+        </tr>
+        <tr>
+          <td>Figure-level</td>
+          <td><code>displot</code>, <code>catplot</code>, <code>relplot</code>, <code>jointplot</code>, <code>pairplot</code>, <code>clustermap</code></td>
+          <td>Создаёт собственную фигуру и сетку. Управляется через <code>height</code>, <code>aspect</code>, <code>row</code>, <code>col</code>. Сохраняется через <code>g.savefig()</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="tip">
+      <strong>Главное соглашение Seaborn:</strong> данные передаются в <code>data=</code>, а имена колонок — строками в <code>x=</code>, <code>y=</code>, <code>hue=</code> и т. д. Это позволяет не писать <code>df["total_bill"]</code> вручную и автоматически строить легенды.
+    </div>
+  </section>
+
+  <!-- 1. SCATTER PLOTS -->
+  <section class="card">
+    <h2>1. Графики рассеяния (Scatter Plots)</h2>
+    <p>Используются для отображения взаимосвязи между двумя непрерывными числовыми переменными. Третья и четвёртая переменные могут кодироваться цветом, формой и размером точек.</p>
+
+    <div class="grid-2">
+      <div>
+        <pre><code>sns.scatterplot(
+    data=df,
+    x="total_bill", y="tip",
+    hue="sex",          # цвет по категории (автолегенда)
+    style="time",       # форма маркера по категории
+    size="size",        # размер точки по числовой колонке
+    sizes=(25, 170),    # диапазон размеров (мин, макс) в точках²
+    palette="Set2",     # палитра: 'viridis', 'coolwarm', 'Set2'
+    alpha=0.85,         # прозрачность: помогает при наложении
+    edgecolor="white",  # контур точек
+    linewidth=0.6
+)
+
+plt.savefig("scatter.png", bbox_inches="tight")</code></pre>
+      </div>
+      <div>
+        <figure class="plot-figure">
+          <div class="plot-box">
+            <img src="img/sns/01_scatter.png" alt="Scatterplot с цветом, формой и размером точек на датасете tips" loading="lazy">
+          </div>
+          <figcaption>Один вызов <code>scatterplot</code> кодирует сразу четыре переменные: счёт, чаевые, пол (цвет), время (форма) и размер компании (размер точки).</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <h3>Параметры <code>scatterplot</code></h3>
+    <table class="param-table">
+      <thead>
+        <tr><th>Параметр</th><th>Что делает</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>x</code>, <code>y</code></td><td>Имена числовых колонок или массивы значений.</td></tr>
+        <tr><td><code>hue</code></td><td>Цветовая дифференциация по категориальной или числовой колонке. Автоматически добавляет легенду.</td></tr>
+        <tr><td><code>style</code></td><td>Форма маркеров по категории. Полезно, если график будут смотреть в чёрно-белом виде.</td></tr>
+        <tr><td><code>size</code></td><td>Размер точек по числовой колонке. Не путать с <code>s</code> — абсолютным размером.</td></tr>
+        <tr><td><code>s</code></td><td>Базовый размер всех точек, если <code>size</code> не задан.</td></tr>
+        <tr><td><code>sizes</code></td><td>Кортеж <code>(min, max)</code> для отображения диапазона <code>size</code>.</td></tr>
+        <tr><td><code>palette</code></td><td>Палитра: качественная (<code>"Set2"</code>), непрерывная (<code>"viridis"</code>, <code>"magma"</code>) или расходящаяся (<code>"coolwarm"</code>).</td></tr>
+        <tr><td><code>hue_order</code>, <code>style_order</code></td><td>Явный порядок категорий в легенде.</td></tr>
+        <tr><td><code>alpha</code>, <code>edgecolor</code>, <code>linewidth</code></td><td>Прозрачность, цвет и толщина контура точек.</td></tr>
+        <tr><td><code>legend</code></td><td><code>"auto"</code>, <code>"brief"</code>, <code>"full"</code> или <code>False</code> — насколько подробной будет легенда.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>Проблема наложения (overplotting):</strong> если точек много, они сливаются в пятно. Помогают <code>alpha</code>, маленький размер, <code>edgecolor="white"</code>, а для очень больших данных — <code>sns.kdeplot(x=..., y=..., fill=True)</code> или <code>sns.histplot(x=..., y=..., bins=...)</code>.
+    </div>
+  </section>
+
+  <!-- 2. DISTRIBUTION PLOTS -->
+  <section class="card">
+    <h2>2. Графики распределений (Distribution Plots)</h2>
+    <p>Отображают плотность и характер распределения непрерывной числовой величины: где центр, насколько широк разброс, есть ли второй пик и выбросы.</p>
+
+    <ul>
+      <li><strong>Rug plot:</strong> каждая точка — отдельное наблюдение в виде чёрточки вдоль оси. Хорош как дополнение к гистограмме или KDE:
+        <pre><code>sns.rugplot(data=df, x="total_bill", height=0.08, color="black")</code></pre>
+      </li>
+      <li><strong>Гистограмма:</strong> делит ряд на равные интервалы (<code>bins</code>) и считает число наблюдений в каждом:
+        <pre><code>sns.histplot(data=df, x="total_bill", bins=30, kde=True)
+sns.displot(data=df, x="total_bill", bins=30, kde=True, rug=True)</code></pre>
+        <code>displot</code> — «фигурная» версия, умеет фасеты через <code>row</code>/<code>col</code>.
+      </li>
+      <li><strong>KDE plot:</strong> ядерная оценка плотности — сглаженная версия гистограммы:
+        <pre><code>sns.kdeplot(
+    data=df, x="total_bill",
+    fill=True,          # заливка под кривой
+    bw_adjust=0.5,      # меньше — изрезаннее, больше — глаже
+    clip=(0, 60)        # ограничить область построения
+)</code></pre>
+        <em>bw_adjust</em> умножает ширину окна сглаживания <code>h</code>.
+      </li>
+      <li><strong>Двумерный KDE:</strong> сглаженный эквивалент диаграммы рассеяния в виде изолиний плотности:
+        <pre><code>sns.kdeplot(data=df, x="total_bill", y="tip", fill=True, levels=9, thresh=0.03)</code></pre>
+      </li>
+    </ul>
+
+    <figure class="plot-figure">
+      <div class="plot-box">
+        <img src="img/sns/02_hist_kde.png" alt="Гистограмма с KDE-кривой и rug-засечками" loading="lazy">
+      </div>
+      <figcaption>Гистограмма + KDE + rug: столбцы показывают частоты, кривая — сглаженную плотность, чёрточки внизу — каждое наблюдение.</figcaption>
+    </figure>
+
+    <h3>Что такое KDE и зачем нужен <code>bw_adjust</code></h3>
+    <div class="formula">
+      f̂<sub>h</sub>(x) = (1 / (n·h)) · Σ<sub>i=1</sub><sup>n</sup> K( (x − x<sub>i</sub>) / h )
+    </div>
+    <p>Здесь <code>n</code> — число наблюдений, <code>h</code> — ширина окна (bandwidth), <code>K</code> — ядро (обычно гауссово). Вокруг каждой точки <code>x<sub>i</sub></code> строится «колокол», а потом они складываются. Чем больше <code>h</code>, тем глаже кривая; чем меньше — тем больше случайных зубцов.</p>
+
+    <figure class="plot-figure">
+      <div class="plot-box">
+        <img src="img/sns/03_kde_bw.png" alt="Три KDE-кривые с разным bw_adjust" loading="lazy">
+      </div>
+      <figcaption>Одни и те же данные при <code>bw_adjust = 0.25</code>, <code>1.0</code> и <code>2.5</code>. Слишком маленькое значение показывает шум, слишком большое — скрывает структуру.</figcaption>
+    </figure>
+
+    <figure class="plot-figure">
+      <div class="plot-box">
+        <img src="img/sns/04_kde2d.png" alt="Двумерный KDE с заливкой и точками" loading="lazy">
+      </div>
+      <figcaption>Двумерный KDE: цвет — плотность совместного распределения. Белые точки — исходные наблюдения, чтобы было видно, откуда берётся оценка.</figcaption>
+    </figure>
+
+    <h3>Параметры распределений</h3>
+    <table class="param-table">
+      <thead>
+        <tr><th>Параметр</th><th>Где используется</th><th>Смысл</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>bins</code></td><td><code>histplot</code>, <code>displot</code></td><td>Число корзин или их границы. Слишком мало — теряется структура, слишком много — шум.</td></tr>
+        <tr><td><code>stat</code></td><td><code>histplot</code></td><td>Что считать: <code>"count"</code>, <code>"density"</code>, <code>"probability"</code>, <code>"percent"</code>.</td></tr>
+        <tr><td><code>kde</code></td><td><code>histplot</code>, <code>displot</code></td><td><code>True</code> — добавить KDE-кривую поверх гистограммы.</td></tr>
+        <tr><td><code>rug</code></td><td><code>displot</code>, <code>rugplot</code></td><td>Показать отдельные наблюдения чёрточками. В <code>histplot</code> для этого вызывают <code>sns.rugplot(..., ax=ax)</code>.</td></tr>
+        <tr><td><code>bw_adjust</code></td><td><code>kdeplot</code>, <code>violinplot</code></td><td>Множитель ширины окна. Больше — глаже, меньше — детальнее.</td></tr>
+        <tr><td><code>fill</code></td><td><code>kdeplot</code></td><td>Заливка под кривой. Старый параметр <code>shade=True</code> устарел — используйте <code>fill=True</code>.</td></tr>
+        <tr><td><code>clip</code></td><td><code>kdeplot</code></td><td>Ограничивает область построения, например <code>clip=(0, 60)</code>.</td></tr>
+        <tr><td><code>common_norm</code></td><td><code>kdeplot</code> с <code>hue</code></td><td><code>True</code> — нормировать все группы вместе; <code>False</code> — каждую отдельно.</td></tr>
+        <tr><td><code>levels</code>, <code>thresh</code></td><td>2D KDE</td><td>Число уровней плотности и порог отсечения самых разреженных областей.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3. CATEGORICAL PLOTS -->
+  <section class="card">
+    <h2>3. Категориальные графики (Categorical Plots)</h2>
+
+    <h3>3.1. Агрегатные метрики</h3>
+    <pre><code># Подсчёт количества наблюдений по группам
+sns.countplot(data=df, x="day", hue="sex", palette="Set2")
+
+# Столбчатая диаграмма с вычислением статистической метрики
+import numpy as np
+
+sns.barplot(
+    data=df,
+    x="day", y="total_bill",
+    estimator=np.mean,     # функция агрегации: mean, median, sum, std
+    errorbar="sd",         # разброс: 'sd' (±1 σ), ('sd', 2), 'se', ('ci', 95), None
+    hue="sex",
+    palette="Set2"
+)
+
+plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left")  # легенда снаружи</code></pre>
+
+    <figure class="plot-figure">
+      <div class="plot-box">
+        <img src="img/sns/05_categorical.png" alt="Четыре категориальных графика: countplot, barplot, boxplot, violinplot" loading="lazy">
+      </div>
+      <figcaption>Четыре способа посмотреть на одну и ту же категориальную переменную: количество, среднее с разбросом, квартили и форму распределения.</figcaption>
+    </figure>
+
+    <div class="warning">
+      <strong>Устаревшие параметры:</strong> в старых версиях Seaborn использовались <code>ci=95</code> и <code>scale="area"</code>. В актуальных версиях вместо них — <code>errorbar=("ci", 95)</code> и <code>density_norm="area"</code>. Если код из туториала выдаёт <code>FutureWarning</code>, скорее всего, дело в этом.
+    </div>
+
+    <h3>3.2. Распределения внутри категорий</h3>
+    <div class="grid-2">
+      <div>
+        <h4>1. Boxplot (ящик с усами)</h4>
+        <p>Разделяет числовой ряд на квартили: медиана <code>Q2</code> (50%), ящик от <code>Q1</code> (25%) до <code>Q3</code> (75%). Межквартильный размах:</p>
+        <div class="formula">
+          IQR = Q3 − Q1<br>
+          нижний ус = Q1 − 1.5·IQR &nbsp;&nbsp;•&nbsp;&nbsp; верхний ус = Q3 + 1.5·IQR
+        </div>
+        <p>Точки за усами считаются выбросами. Важно: это не «ошибки», а просто значения, которые далеко отстоят от основной массы.</p>
+        <pre><code>sns.boxplot(
+    data=df, x="day", y="total_bill",
+    hue="smoker",
+    whis=1.5,          # правило усов
+    showfliers=True,   # показывать выбросы
+    width=0.6
+)</code></pre>
+
+        <figure class="plot-figure">
+          <div class="plot-box">
+            <img src="img/sns/06b_box_anatomy.png" alt="Анатомия boxplot: квартили, IQR, усы и выбросы" loading="lazy">
+          </div>
+          <figcaption>Анатомия boxplot: <code>Q1</code>, медиана, <code>Q3</code>, <code>IQR</code>, усы и выбросы.</figcaption>
+        </figure>
+
+        <h4>2. Violinplot (скрипичный график)</h4>
+        <p>Симметричное зеркальное отображение KDE-плотности. Показывает не только квартили, но и форму распределения — например, второй пик.</p>
+        <pre><code>sns.violinplot(
+    data=df, x="day", y="total_bill",
+    hue="sex",
+    split=True,        # две половины для двух подкатегорий
+    inner="quartile",  # линии квартилей внутри
+    bw_adjust=0.5,     # сглаживание
+    density_norm="area"  # нормировка ширины
+)</code></pre>
+      </div>
+
+      <div>
+        <h4>3. Swarmplot и boxenplot</h4>
+        <ul>
+          <li><strong>swarmplot:</strong> каждая точка видна, точки сдвигаются по горизонтали, чтобы не накладываться. Хорош для небольших выборок.</li>
+          <li><strong>boxenplot</strong> (letter-value plot): расширенный boxplot, показывает больше квантилей. Полезен для больших массивов данных.</li>
+        </ul>
+        <pre><code>sns.swarmplot(
+    data=df, x="day", y="total_bill",
+    hue="sex", dodge=True, size=3.5
+)
+
+sns.boxenplot(
+    data=df, x="day", y="total_bill",
+    hue="smoker"
+)</code></pre>
+
+        <figure class="plot-figure">
+          <div class="plot-box">
+            <img src="img/sns/06_swarm_boxen.png" alt="Swarmplot и boxenplot на датасете tips" loading="lazy">
+          </div>
+          <figcaption>Слева <code>swarmplot</code> показывает каждое наблюдение, справа <code>boxenplot</code> — множество квантилей.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <h3>Параметры категориальных графиков</h3>
+    <table class="param-table">
+      <thead>
+        <tr><th>Параметр</th><th>Что делает</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>estimator</code></td><td>Функция агрегации для <code>barplot</code>: <code>np.mean</code>, <code>np.median</code>, <code>np.sum</code>, <code>len</code>.</td></tr>
+        <tr><td><code>errorbar</code></td><td>Что рисовать вместо столбика ошибки: <code>"sd"</code>, <code>"se"</code>, <code>("ci", 95)</code>, <code>("pi", 95)</code> или <code>None</code>.</td></tr>
+        <tr><td><code>order</code>, <code>hue_order</code></td><td>Порядок категорий на оси и в легенде.</td></tr>
+        <tr><td><code>dodge</code></td><td><code>True</code> — раздвигать группы при <code>hue</code>, чтобы столбцы/точки не перекрывались.</td></tr>
+        <tr><td><code>width</code></td><td>Ширина столбцов или ящиков.</td></tr>
+        <tr><td><code>whis</code></td><td>Правило усов в <code>boxplot</code>: по умолчанию <code>1.5</code> IQR.</td></tr>
+        <tr><td><code>showfliers</code>, <code>fliersize</code></td><td>Показывать ли выбросы и какого они размера.</td></tr>
+        <tr><td><code>inner</code></td><td>Что рисовать внутри скрипки: <code>"box"</code>, <code>"quartile"</code>, <code>"point"</code>, <code>"stick"</code> или <code>None</code>.</td></tr>
+        <tr><td><code>split</code></td><td>Разделить скрипку на две половины для двух уровней <code>hue</code>.</td></tr>
+        <tr><td><code>density_norm</code></td><td>Как нормировать ширину скрипки: <code>"area"</code>, <code>"count"</code>, <code>"width"</code>.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 4. COMPARISON PLOTS -->
+  <section class="card">
+    <h2>4. Графики сравнения (Comparison Plots)</h2>
+    <div class="grid-2">
+      <div>
+        <h3><code>jointplot()</code></h3>
+        <p>Совмещает двумерный график зависимости по центру и маргинальные одномерные распределения вдоль осей. Отличный способ посмотреть связь двух переменных и их распределения одновременно.</p>
+        <pre><code>g = sns.jointplot(
+    data=df, x="total_bill", y="tip",
+    kind="scatter",   # 'scatter', 'kde', 'hex', 'hist', 'reg', 'resid'
+    hue="sex",
+    palette="Set2",
+    alpha=0.7,
+    height=6,         # размер фигуры в дюймах
+    ratio=4,          # соотношение центральной и маргинальной панелей
+    space=0.25,       # отступ между панелями
+    marginal_kws=dict(alpha=0.4)
+)
+
+g.ax_joint.set_xlim(0, 60)  # доступ к центральным осям
+g.savefig("joint.png", bbox_inches="tight")</code></pre>
+      </div>
+      <div>
+        <figure class="plot-figure">
+          <div class="plot-box">
+            <img src="img/sns/07_jointplot.png" alt="Jointplot: scatter с маргинальными распределениями по полу" loading="lazy">
+          </div>
+          <figcaption><code>jointplot</code>: в центре — scatter, сверху и справа — распределения переменных. <code>hue</code> разделяет и точки, и маргинальные кривые.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <h3><code>pairplot()</code></h3>
+    <p>Автоматически строит матрицу парных взаимосвязей для всех числовых колонок датафрейма. По диагонали — распределения, вне диагонали — scatter или KDE.</p>
+
+    <pre><code>g = sns.pairplot(
+    data=iris,
+    hue="species",
+    corner=True,        # убрать дублирующий верхний треугольник
+    diag_kind="kde",    # 'hist' или 'kde' на диагонали
+    kind="scatter",     # 'scatter' или 'reg'
+    plot_kws=dict(s=25, alpha=0.7),
+    diag_kws=dict(fill=True, alpha=0.45),
+    height=1.8,         # размер каждой панели
+    aspect=1
+)
+
+g.savefig("pairplot.png", bbox_inches="tight")</code></pre>
+
+    <figure class="plot-figure">
+      <div class="plot-box">
+        <img src="img/sns/08_pairplot.png" alt="Pairplot по датасету iris с раскраской по видам" loading="lazy">
+      </div>
+      <figcaption><code>pairplot</code> с <code>corner=True</code>: верхний треугольник намеренно скрыт, чтобы не дублировать те же пары переменных. Цвет — вид ириса.</figcaption>
+    </figure>
+
+    <div class="note">
+      <strong>Почему на диагонали KDE, а не scatter:</strong> пара «переменная с самой собой» — это просто её распределение. Поэтому на диагонали рисуют гистограмму или KDE, а не точки.
+    </div>
+
+    <h3>Параметры comparison-графиков</h3>
+    <table class="param-table">
+      <thead>
+        <tr><th>Параметр</th><th>Где</th><th>Смысл</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>kind</code></td><td><code>jointplot</code>, <code>pairplot</code></td><td>Тип центрального графика. Для <code>jointplot</code>: <code>"scatter"</code>, <code>"kde"</code>, <code>"hex"</code>, <code>"hist"</code>, <code>"reg"</code>, <code>"resid"</code>.</td></tr>
+        <tr><td><code>height</code>, <code>aspect</code></td><td>figure-level</td><td>Высота каждой панели в дюймах и соотношение сторон.</td></tr>
+        <tr><td><code>ratio</code>, <code>space</code></td><td><code>jointplot</code></td><td>Соотношение размеров центральной и маргинальной панелей и отступ между ними.</td></tr>
+        <tr><td><code>corner</code></td><td><code>pairplot</code></td><td><code>True</code> — оставить только нижний треугольник матрицы.</td></tr>
+        <tr><td><code>diag_kind</code></td><td><code>pairplot</code></td><td><code>"hist"</code> или <code>"kde"</code> — что рисовать на диагонали.</td></tr>
+        <tr><td><code>vars</code></td><td><code>pairplot</code></td><td>Список колонок, если не нужны все числовые признаки.</td></tr>
+        <tr><td><code>plot_kws</code>, <code>diag_kws</code></td><td><code>pairplot</code></td><td>Словари с настройками для обычных панелей и диагонали.</td></tr>
+        <tr><td><code>marginal_kws</code></td><td><code>jointplot</code></td><td>Настройки маргинальных распределений: <code>bins</code>, <code>fill</code>, <code>alpha</code>.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 5. SEABORN GRIDS -->
+  <section class="card">
+    <h2>5. Фасетные сетки (Seaborn Grids)</h2>
+    <p>Позволяют разделять построение графиков на сетку подграфиков по категориальным признакам. Это удобно, когда нужно сравнить один и тот же график в разных подгруппах.</p>
+
+    <pre><code># 1. catplot: автоматическое фасетирование категориальных графиков
+g = sns.catplot(
+    data=df, x="day", y="total_bill",
+    kind="box",       # 'box', 'violin', 'bar', 'count', 'point', 'strip', 'swarm'
+    row="smoker",     # разделение по строкам подграфиков
+    col="time",       # разделение по колонкам подграфиков
+    height=3.2,       # высота каждой панели
+    aspect=1.15,      # ширина / высота
+    margin_titles=True,
+    palette="Set3"
+)
+
+g.savefig("catplot.png", bbox_inches="tight")</code></pre>
+
+    <figure class="plot-figure">
+      <div class="plot-box">
+        <img src="img/sns/09_catplot.png" alt="Catplot с фасетами по курящим и времени приёма пищи" loading="lazy">
+      </div>
+      <figcaption><code>catplot</code> строит сетку 2 × 2: строки — курящие/некурящие, столбцы — обед/ужин.</figcaption>
+    </figure>
+
+    <pre><code># 2. PairGrid: кастомная настройка попарных сеток
+g = sns.PairGrid(data=iris, hue="species", palette="Set2")
+
+g.map_upper(sns.scatterplot, s=20, alpha=0.7)  # верхний треугольник
+g.map_diag(sns.kdeplot, fill=True, alpha=0.45) # главная диагональ
+g.map_lower(sns.kdeplot, fill=True, alpha=0.4) # нижний треугольник
+g.add_legend(title="species")
+
+g.savefig("pairgrid.png", bbox_inches="tight")</code></pre>
+
+    <figure class="plot-figure">
+      <div class="plot-box">
+        <img src="img/sns/10_pairgrid.png" alt="PairGrid с разными типами графиков в верхнем, нижнем треугольнике и на диагонали" loading="lazy">
+      </div>
+      <figcaption><code>PairGrid</code> позволяет задать свой тип графика для каждой части матрицы: scatter сверху, KDE снизу и на диагонали.</figcaption>
+    </figure>
+
+    <h3>Figure-level vs axes-level</h3>
+    <table>
+      <thead>
+        <tr><th>Задача</th><th>Инструмент</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Один график на готовых осях</td><td><code>sns.boxplot(..., ax=ax)</code></td></tr>
+        <tr><td>Сетка по одной категории</td><td><code>sns.catplot(..., col="...")</code> или <code>FacetGrid</code></td></tr>
+        <tr><td>Сетка по двум категориям</td><td><code>sns.catplot(..., row="...", col="...")</code></td></tr>
+        <tr><td>Матрица попарных связей</td><td><code>sns.pairplot</code> или <code>PairGrid</code></td></tr>
+        <tr><td>Своя сетка из произвольных графиков</td><td><code>FacetGrid</code> + <code>map_dataframe</code></td></tr>
+      </tbody>
+    </table>
+
+    <pre><code># FacetGrid — низкоуровневая основа для своих сеток
+g = sns.FacetGrid(df, col="time", row="smoker", height=3.2, aspect=1.1)
+g.map_dataframe(sns.scatterplot, x="total_bill", y="tip", alpha=0.7)
+g.set_axis_labels("Счёт, $", "Чаевые, $")
+g.add_legend()</code></pre>
+
+    <div class="tip">
+      <strong>Сохранение figure-level объектов:</strong> у <code>catplot</code>, <code>pairplot</code>, <code>jointplot</code> и <code>PairGrid</code> есть метод <code>g.savefig()</code>. Не вызывайте <code>plt.savefig()</code> после них «наугад»: активная фигура может быть не той, которую вы ожидаете.
+    </div>
+  </section>
+
+  <!-- 6. MATRIX PLOTS -->
+  <section class="card">
+    <h2>6. Матричные графики (Matrix Plots)</h2>
+    <p>Визуальный аналог сводных таблиц (pivot tables) и корреляционных матриц. Цвет ячейки кодирует число, поэтому такие графики хороши для быстрого поиска закономерностей.</p>
+
+    <div class="grid-2">
+      <div>
+        <h3>Heatmap (тепловая карта)</h3>
+        <pre><code># Предварительно вычисляем корреляцию:
+corr = iris.drop(columns="species").corr()
+
+sns.heatmap(
+    data=corr,
+    annot=True,        # числа внутри ячеек
+    fmt=".2f",         # формат чисел
+    cmap="coolwarm",   # палитра
+    center=0,          # центр расходящейся палитры
+    vmin=-1, vmax=1,   # фиксированный диапазон
+    linewidths=0.5,    # линии между ячейками
+    square=True,       # квадратные ячейки
+    cbar_kws={"shrink": 0.8}
+)</code></pre>
+
+        <figure class="plot-figure">
+          <div class="plot-box">
+            <img src="img/sns/11_heatmap.png" alt="Тепловая карта корреляционной матрицы iris" loading="lazy">
+          </div>
+          <figcaption>Корреляционная матрица ирисов: красный — положительная связь, синий — отрицательная, ноль — её отсутствие.</figcaption>
+        </figure>
+      </div>
+
+      <div>
+        <h3>Clustermap (кластерная карта)</h3>
+        <p>Строит тепловую карту и автоматически группирует схожие строки и столбцы с помощью иерархической кластеризации. По краям появляются дендрограммы.</p>
+        <pre><code>sns.clustermap(
+    data=df_pivot,
+    cmap="coolwarm",
+    center=0,
+    standard_scale=1,   # нормировка по строкам (0) или столбцам (1)
+    # z_score=0,        # альтернатива: z-нормировка
+    method="average",   # метод кластеризации
+    metric="euclidean", # метрика расстояния
+    linewidths=0.4,
+    dendrogram_ratio=0.14,
+    figsize=(8, 6)
+)</code></pre>
+
+        <figure class="plot-figure">
+          <div class="plot-box">
+            <img src="img/sns/12_clustermap.png" alt="Кластерная карта с дендрограммами строк и столбцов" loading="lazy">
+          </div>
+          <figcaption><code>clustermap</code>: строки и столбцы переставлены так, чтобы похожие элементы оказались рядом. Дендрограммы показывают структуру кластеров.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <h3>Параметры матричных графиков</h3>
+    <table class="param-table">
+      <thead>
+        <tr><th>Параметр</th><th>Что делает</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>annot</code></td><td><code>True</code> — подписать значения в ячейках. Можно передать свою матрицу подписей.</td></tr>
+        <tr><td><code>fmt</code></td><td>Формат чисел: <code>".2f"</code>, <code>".1%"</code>, <code>"d"</code>.</td></tr>
+        <tr><td><code>cmap</code></td><td>Палитра: <code>"coolwarm"</code>, <code>"viridis"</code>, <code>"rocket"</code>, <code>"mako"</code>.</td></tr>
+        <tr><td><code>center</code></td><td>Значение, относительно которого строится расходящаяся палитра. Для корреляций — <code>0</code>.</td></tr>
+        <tr><td><code>vmin</code>, <code>vmax</code></td><td>Границы цветовой шкалы. Полезно, чтобы сравнить несколько heatmap в одном масштабе.</td></tr>
+        <tr><td><code>linewidths</code></td><td>Толщина линий между ячейками.</td></tr>
+        <tr><td><code>cbar</code>, <code>cbar_kws</code></td><td>Показывать ли цветовую шкалу и как её настроить.</td></tr>
+        <tr><td><code>mask</code></td><td>Булева маска: <code>True</code> — ячейка не рисуется. Удобно скрыть верхний треугольник корреляционной матрицы.</td></tr>
+        <tr><td><code>standard_scale</code></td><td>Нормировка в clustermap: <code>0</code> — по строкам, <code>1</code> — по столбцам.</td></tr>
+        <tr><td><code>z_score</code></td><td>Z-нормировка строк (<code>0</code>) или столбцов (<code>1</code>): вычитание среднего и деление на стандартное отклонение.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="formula">
+      r = cov(X, Y) / (σ<sub>X</sub> · σ<sub>Y</sub>)
+    </div>
+    <p>Коэффициент корреляции Пирсона <code>r</code> лежит от −1 до 1. Он измеряет только <em>линейную</em> связь: <code>r ≈ 0</code> не означает, что связи нет — она может быть нелинейной.</p>
+
+    <div class="warning">
+      <strong>Clustermap требует SciPy.</strong> Если при вызове появляется <code>RuntimeError: clustermap requires scipy to be available</code>, установите пакет: <code>pip install scipy</code>.
+    </div>
+  </section>
+
+  <!-- 7. CHEAT SHEET -->
+  <section class="card">
+    <h2>7. Шпаргалка: какой график выбрать</h2>
+    <table>
+      <thead>
+        <tr><th>Задача</th><th>График</th><th>Функция</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Связь двух числовых переменных</td><td>Scatter / 2D KDE</td><td><code>scatterplot</code>, <code>kdeplot</code>, <code>jointplot</code></td></tr>
+        <tr><td>Распределение одной числовой переменной</td><td>Histogram / KDE / Box / Violin</td><td><code>histplot</code>, <code>kdeplot</code>, <code>boxplot</code>, <code>violinplot</code></td></tr>
+        <tr><td>Сравнение числовой переменной по категориям</td><td>Box / Violin / Bar / Strip</td><td><code>boxplot</code>, <code>violinplot</code>, <code>barplot</code>, <code>stripplot</code></td></tr>
+        <tr><td>Количество наблюдений по категориям</td><td>Count plot</td><td><code>countplot</code></td></tr>
+        <tr><td>Пары числовых переменных</td><td>Pair matrix</td><td><code>pairplot</code>, <code>PairGrid</code></td></tr>
+        <tr><td>Матрица корреляций / сводная таблица</td><td>Heatmap / Clustermap</td><td><code>heatmap</code>, <code>clustermap</code></td></tr>
+        <tr><td>Один график в разных подгруппах</td><td>Facet grid</td><td><code>catplot</code>, <code>FacetGrid</code>, <code>displot</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Стиль и палитры</h3>
+    <pre><code># Глобальная тема: сетка, шрифты, фон
+sns.set_theme(
+    style="whitegrid",   # 'darkgrid', 'whitegrid', 'dark', 'white', 'ticks'
+    palette="Set2",      # палитра по умолчанию
+    context="notebook",  # 'paper', 'notebook', 'talk', 'poster'
+    font_scale=1.0
+)
+
+# Отдельная палитра
+colors = sns.color_palette("husl", 8)
+sns.color_palette("coolwarm", as_cmap=True)  # непрерывная палитра
+
+# Временный стиль для одного графика
+with sns.axes_style("whitegrid"):
+    sns.boxplot(data=df, x="day", y="total_bill")</code></pre>
+
+    <h3>Частые ошибки</h3>
+    <ul>
+      <li><strong>Забыли <code>data=</code>:</strong> тогда <code>x="total_bill"</code> будет воспринято как строка, а не как имя колонки.</li>
+      <li><strong>Путают <code>s</code> и <code>size</code>:</strong> <code>s</code> — абсолютный размер в точках², <code>size</code> — колонка, по которой размер кодируется.</li>
+      <li><strong>Слишком много категорий в <code>hue</code>:</strong> легенда и цвета перестают читаться. Оставьте 5–7 групп или объедините редкие категории.</li>
+      <li><strong>Слишком маленький <code>bw_adjust</code>:</strong> KDE начинает показывать шум вместо структуры.</li>
+      <li><strong>Смотрят на <code>barplot</code> как на распределение:</strong> столбец показывает агрегат (среднее), а не все точки. Для распределения используйте box/violin/strip.</li>
+      <li><strong>Используют <code>ci</code> и <code>scale</code>:</strong> в новых версиях это устаревшие параметры, замените на <code>errorbar</code> и <code>density_norm</code>.</li>
+      <li><strong>Сохраняют не ту фигуру:</strong> для figure-level объектов вызывайте <code>g.savefig()</code>.</li>
+      <li><strong>Забывают про <code>plt.tight_layout()</code>:</strong> подписи и легенды могут обрезаться, особенно при сохранении.</li>
+    </ul>
+
+    <div class="tip">
+      <strong>Итог:</strong> Seaborn лучше всего работает с «длинным» форматом данных, где каждая строка — одно наблюдение, а признаки — столбцы. Начните с <code>sns.scatterplot</code> или <code>sns.histplot</code>, затем добавляйте <code>hue</code>, <code>style</code>, <code>size</code> и фасеты. А если нужен нестандартный график — используйте axes-level функцию с <code>ax=</code> и донастраивайте её средствами Matplotlib.
+    </div>
+  </section>
+
+  <!-- Нижняя кнопка "Назад" -->
+  <div class="nav-back-bottom-wrap">
+    <a href="index.html" class="nav-back">
+      <span>←</span> Вернуться к оглавлению
+    </a>
+  </div>
+</div>
+
+</body>
+</html>
