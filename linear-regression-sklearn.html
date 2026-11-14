@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Линейная регрессия в Scikit-learn</title>
+<link href="style.css" rel="stylesheet"/>
+<style>
+    /* Небольшие дополнения только для этой страницы.
+       Основная палитра, карточки, типографика и адаптивность берутся из style.css. */
+    .page { max-width: 1050px; }
+    .hero { margin-top: 8px; }
+    .toc-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:8px; list-style:none; margin:14px 0 0; padding:0; }
+    .toc-list a { display:block; padding:9px 11px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2); color:var(--text); font-size:.9rem; }
+    .toc-list a:hover { border-color:var(--accent); color:var(--accent); text-decoration:none; }
+    .metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin:16px 0; }
+    .metric-card { background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:16px; }
+    .metric-card h3 { margin:0 0 8px; color:var(--accent); }
+    .metric-card .formula { margin:10px 0; font-size:.9rem; }
+    .flow { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; margin:18px 0; }
+    .flow-item { min-width:125px; padding:12px 14px; text-align:center; background:var(--surface-2); border:1px solid var(--border); border-radius:9px; }
+    .flow-arrow { color:var(--accent); font-size:1.3rem; font-weight:700; }
+    .split-visual { display:grid; grid-template-columns:7fr 3fr; gap:8px; margin:14px 0; }
+    .split-visual div { padding:13px; border-radius:8px; text-align:center; font-weight:600; }
+    .train-part { background:rgba(63,185,80,.13); border:1px solid var(--success); color:var(--text-bright); }
+    .test-part { background:var(--accent-soft); border:1px solid var(--accent); color:var(--text-bright); }
+    .diagram { background:#fff; border-radius:10px; padding:12px; margin:16px 0; overflow:hidden; }
+    .diagram svg { display:block; width:100%; height:auto; }
+    .diagram figcaption { color:#596579; text-align:center; font-size:.85rem; margin-top:8px; }
+    .code-label { color:var(--muted); font-size:.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin:14px 0 5px; }
+    .two-col { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .two-col > * { min-width:0; }
+    .inline-note { color:var(--muted); font-size:.9rem; }
+    .number-list { counter-reset:step; list-style:none; margin:16px 0; padding:0; }
+    .number-list li { position:relative; padding:0 0 16px 42px; margin:0; }
+    .number-list li::before { counter-increment:step; content:counter(step); position:absolute; left:0; top:0; width:28px; height:28px; display:grid; place-items:center; border-radius:50%; color:#fff; background:var(--step-color); font-weight:700; }
+    .table-wrap { margin:14px 0; }
+    .small { font-size:.88rem; color:var(--muted); }
+    @media(max-width:640px) {
+      .two-col { grid-template-columns:1fr; }
+      .split-visual { grid-template-columns:1fr; }
+      .flow-arrow { transform:rotate(90deg); }
+    }
+  
+    /* Дополнения к конспекту; базовая дизайн-система по-прежнему в style.css */
+    .lr-plot-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0;}
+    .lr-plot-grid > * {min-width:0}
+    .lr-plot-grid figure {margin:0}
+    .lr-plot-grid .diagram {margin:0}
+    .lr-plot-grid h4 {margin:12px 0 6px}
+    .lr-plot-grid p {font-size:.92rem;margin:6px 0 10px}
+    .lr-subtle {font-size:.88rem;color:var(--muted)}
+    .lr-scroll {overflow-x:auto;}
+    .lr-check {border-left:3px solid var(--accent);background:var(--surface-2);border-radius:8px;padding:12px 16px;margin:15px 0}
+    .lr-legend {font-size:.83rem;color:var(--muted);margin-top:6px}
+    .lr-plot-annotation {color:#334155}
+    @media(max-width:700px){.lr-plot-grid{grid-template-columns:1fr}}
+
+/* Графики оформлены как в предыдущем конспекте на Chart.js */
+.lr-chart-figure { background:var(--surface-2, #161b22); border:1px solid var(--border, #30363d); padding:12px 14px; border-radius:12px; }
+.lr-chart-box {height:260px; position:relative; width:100%; }
+#regressionResiduals, #residualHistogram {max-width:100%;}
+.lr-chart-figure figcaption { color:var(--muted, #8b949e); margin-top:9px; font-size:.83rem; }
+@media (min-width:800px){.lr-chart-figure:has(#regressionResiduals) .lr-chart-box {height:330px;} .lr-chart-figure:has(#residualHistogram) .lr-chart-box {height:300px;}}
+@media (max-width:640px){ .lr-chart-box {height:225px;} }
+</style>
+<script defer="" src="https://cdn.jsdelivr.net/npm/chart.js"></script></head>
+<body>
+<main class="page">
+<a class="nav-back nav-back-top" href="index.html">← Назад к базе знаний</a>
+<section class="hero">
+<div class="eyebrow">Machine Learning · Scikit-learn</div>
+<h1>Линейная регрессия</h1>
+<p>Полный цикл работы с регрессионной моделью: подготовка данных, разделение выборки, обучение, оценка качества, анализ остатков и сохранение модели.</p>
+<div class="hero-meta">
+<span class="pill">Supervised Learning</span>
+<span class="pill">Regression</span>
+<span class="pill">Model Estimator API</span>
+</div>
+</section>
+<div class="layout">
+<aside class="sidebar">
+<strong>Содержание</strong>
+<nav>
+<a href="#idea">1. Идея и данные</a>
+<a href="#workflow">2. Общий процесс</a>
+<a href="#split">3. Train / Test Split</a>
+<a href="#estimator">4. Estimator API</a>
+<a href="#metrics">5. Метрики</a>
+<a href="#residuals">6. Остатки</a>
+<a href="#diagnostics">7. Диагностика</a>
+<a href="#final">8. Финальная модель</a>
+<a href="#coefficients">9. Коэффициенты</a>
+<a href="#prediction">10. Новые данные</a>
+<a href="#all-code">11. Код целиком</a><a href="#save">12. Сохранение</a>
+</nav>
+</aside>
+<article class="content">
+<section class="card" id="idea">
+<span class="tag">Постановка задачи</span>
+<h2>1. Идея и данные</h2>
+<p><strong>Scikit-learn</strong> — библиотека машинного обучения с единым интерфейсом для моделей. В частности, она предоставляет API в стиле <code>Estimator</code>: модель создаётся как объект, обучается методом <code>.fit()</code>, а предсказания строит методом <code>.predict()</code>.</p>
+<p>В примере рассматриваются рекламные расходы и продажи продукта. Нужно выяснить, как расходы на рекламу по разным каналам связаны с продажами, а затем научиться предсказывать продажи.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Обозначение</th><th>Содержание</th><th>Роль</th></tr></thead>
+<tbody>
+<tr><td><code>TV</code></td><td>Бюджет рекламы на телевидении</td><td rowspan="3">Признаки <strong>X</strong></td></tr>
+<tr><td><code>radio</code></td><td>Бюджет рекламы на радио</td></tr>
+<tr><td><code>newspaper</code></td><td>Бюджет рекламы в газетах</td></tr>
+<tr><td><code>sales</code></td><td>Объём продаж</td><td>Целевая переменная <strong>y</strong></td></tr>
+</tbody>
+</table>
+</div>
+<p class="small">В исходном датасете расходы измеряются в тысячах долларов, а продажи — в тысячах единиц товара.</p>
+<figure class="diagram">
+<svg aria-label="Три признака поступают в модель, которая предсказывает продажи" role="img" viewbox="0 0 760 245">
+<rect fill="#eaf2ff" height="48" rx="9" stroke="#4387d8" width="190" x="18" y="20"></rect>
+<rect fill="#eaf2ff" height="48" rx="9" stroke="#4387d8" width="190" x="18" y="98"></rect>
+<rect fill="#eaf2ff" height="48" rx="9" stroke="#4387d8" width="190" x="18" y="176"></rect>
+<g fill="#17365d" font-size="17" font-weight="600" text-anchor="middle">
+<text x="113" y="50">TV</text><text x="113" y="128">Radio</text><text x="113" y="206">Newspaper</text>
+</g>
+<g fill="none" stroke="#64748b" stroke-width="2"><path d="M208 44 L330 104"></path><path d="M208 122 L330 122"></path><path d="M208 200 L330 140"></path></g>
+<rect fill="#e8f7ed" height="90" rx="12" stroke="#279653" stroke-width="2" width="190" x="330" y="77"></rect>
+<text fill="#14532d" font-size="18" font-weight="700" text-anchor="middle" x="425" y="113">LinearRegression</text>
+<text fill="#14532d" font-size="14" text-anchor="middle" x="425" y="139">обученная модель</text>
+<path d="M520 122 H625" stroke="#64748b" stroke-width="2.5"></path>
+<path d="M615 114 L627 122 L615 130" fill="none" stroke="#64748b" stroke-width="2.5"></path>
+<rect fill="#fff1e8" height="64" rx="10" stroke="#d97706" stroke-width="2" width="112" x="630" y="90"></rect>
+<text fill="#7c2d12" font-size="18" font-weight="700" text-anchor="middle" x="686" y="117">sales</text>
+<text fill="#7c2d12" font-size="13" text-anchor="middle" x="686" y="138">прогноз</text>
+</svg>
+<figcaption>Модель использует несколько признаков одновременно, чтобы предсказать целевую переменную.</figcaption>
+</figure>
+<div class="note"><strong>Что здесь называется линейной регрессией?</strong> Модель ищет коэффициенты в формуле <code>ŷ = b₀ + b₁·TV + b₂·radio + b₃·newspaper</code>. Она линейна <em>по коэффициентам</em>. В простейшем случае с одним признаком это прямая; здесь же три признака, и модель описывает гиперплоскость.</div>
+<p>Каждая строка таблицы — одна рекламная кампания, её три бюджета — признаки <code>X</code>, реальные продажи — ответ <code>y</code>. <strong>Предсказание</strong> обозначаем <code>ŷ</code> (y с крышечкой).</p></section>
+<section class="card" id="workflow">
+<span class="tag">Пайплайн</span>
+<h2>2. Общий процесс работы</h2>
+<div class="flow">
+<div class="flow-item">Загрузить данные</div><span class="flow-arrow">→</span>
+<div class="flow-item">Выделить X и y</div><span class="flow-arrow">→</span>
+<div class="flow-item">Разделить выборку</div><span class="flow-arrow">→</span>
+<div class="flow-item">Обучить модель</div><span class="flow-arrow">→</span>
+<div class="flow-item">Оценить качество</div>
+</div>
+<p>Важная идея: качество модели нужно проверять на данных, которые она <strong>не использовала при обучении</strong>. Иначе мы не получим честную оценку того, как модель будет работать на новых наблюдениях.</p>
+<div class="note"><strong>Обозначения:</strong> <code>X</code> — матрица признаков; <code>y</code> — правильные ответы. После разбиения получаем <code>X_train</code>, <code>X_test</code>, <code>y_train</code> и <code>y_test</code>.</div>
+</section>
+<section class="card" id="split">
+<span class="tag">Подготовка данных</span>
+<h2>3. Разделение на обучающую и тестовую выборки</h2>
+<p>Для разделения используется <code>train_test_split</code> из <code>sklearn.model_selection</code>.</p>
+<pre><code>from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.3,
+    random_state=42
+)</code></pre>
+<div class="split-visual">
+<div class="train-part">70% · Train<br/><span class="small">Модель обучается</span></div>
+<div class="test-part">30% · Test<br/><span class="small">Модель оценивается</span></div>
+</div>
+<ul>
+<li><code>test_size=0.3</code> — 30% данных отправляется в тестовую выборку, оставшиеся 70% — в обучающую.</li>
+<li><code>random_state</code> — фиксирует случайное разбиение, чтобы при повторном запуске получить тот же результат.</li>
+</ul>
+<div class="warning"><strong>Не обучаем модель на тестовой выборке.</strong> Иначе тест перестанет быть независимой проверкой на ранее не виденных данных.</div>
+<p class="code-label">Подготовка X и y</p>
+<pre><code>df = pd.read_csv("Advertising.csv")
+
+X = df.drop("sales", axis=1)
+y = df["sales"]</code></pre>
+<p class="small">Здесь <code>sales</code> исключается из таблицы признаков и становится целевой переменной.</p>
+<div class="lr-check"><strong>Проверка формы данных</strong><pre><code>print(X.shape)       # (число объектов, 3)
+print(y.shape)       # (число объектов,)
+print(X_train.shape, X_test.shape)</code></pre><p class="lr-subtle">Если CSV содержит служебную колонку <code>Unnamed: 0</code> с номерами строк, её нужно исключить из X: это не рекламный бюджет.</p></div></section>
+<section class="card" id="estimator">
+<span class="tag">Обучение</span>
+<h2>4. Создание и обучение модели — Estimator API</h2>
+<p>В Scikit-learn модель — это объект класса. Для линейной регрессии используется <code>LinearRegression</code>.</p>
+<ol class="number-list">
+<li><strong>Импортируем класс модели</strong><pre><code>from sklearn.linear_model import LinearRegression</code></pre></li>
+<li><strong>Создаём экземпляр</strong><pre><code>model = LinearRegression()</code></pre></li>
+<li><strong>Обучаем на тренировочных данных</strong><pre><code>model.fit(X_train, y_train)</code></pre></li>
+<li><strong>Получаем предсказания для тестовых объектов</strong><pre><code>pred = model.predict(X_test)</code></pre></li>
+</ol>
+<figure class="diagram">
+<svg aria-label="Схема fit и predict" role="img" viewbox="0 0 720 150">
+<rect fill="#eaf2ff" height="95" rx="10" stroke="#4387d8" stroke-width="2" width="190" x="15" y="25"></rect>
+<text fill="#17365d" font-size="19" font-weight="700" text-anchor="middle" x="110" y="60">.fit(X_train, y_train)</text>
+<text fill="#17365d" font-size="14" text-anchor="middle" x="110" y="88">обучение</text>
+<path d="M205 72 H280" stroke="#64748b" stroke-width="2.5"></path><path d="M270 64 L282 72 L270 80" fill="none" stroke="#64748b" stroke-width="2.5"></path>
+<rect fill="#e8f7ed" height="95" rx="10" stroke="#279653" stroke-width="2" width="150" x="285" y="25"></rect>
+<text fill="#14532d" font-size="19" font-weight="700" text-anchor="middle" x="360" y="66">model</text>
+<text fill="#14532d" font-size="14" text-anchor="middle" x="360" y="91">обучена</text>
+<path d="M435 72 H510" stroke="#64748b" stroke-width="2.5"></path><path d="M500 64 L512 72 L500 80" fill="none" stroke="#64748b" stroke-width="2.5"></path>
+<rect fill="#fff1e8" height="95" rx="10" stroke="#d97706" stroke-width="2" width="190" x="515" y="25"></rect>
+<text fill="#7c2d12" font-size="19" font-weight="700" text-anchor="middle" x="610" y="60">.predict(X_test)</text>
+<text fill="#7c2d12" font-size="14" text-anchor="middle" x="610" y="88">предсказания</text>
+</svg>
+<figcaption>Типичный цикл работы с моделью Scikit-learn.</figcaption>
+</figure>
+</section>
+<section class="card" id="metrics">
+<span class="tag">Оценка качества</span>
+<h2>5. Метрики регрессии</h2>
+<p>После получения предсказаний сравниваем их с истинными значениями на тестовой выборке. В конспекте рассматриваются три метрики: MAE, MSE и RMSE.</p>
+<div class="metric-grid">
+<div class="metric-card">
+<h3>MAE</h3>
+<p><strong>Mean Absolute Error</strong> — средняя абсолютная ошибка.</p>
+<div class="formula">MAE = (1 / n) · Σ |yᵢ − ŷᵢ|</div>
+<p>Показывает средний размер ошибки без учёта её знака. Отдельные большие ошибки не получают дополнительного квадратичного штрафа.</p>
+</div>
+<div class="metric-card">
+<h3>MSE</h3>
+<p><strong>Mean Squared Error</strong> — средняя квадратичная ошибка.</p>
+<div class="formula">MSE = (1 / n) · Σ (yᵢ − ŷᵢ)²</div>
+<p>Квадрат ошибки сильнее увеличивает вклад крупных промахов. Единицы измерения — квадрат единиц целевой переменной.</p>
+</div>
+<div class="metric-card">
+<h3>RMSE</h3>
+<p><strong>Root Mean Squared Error</strong> — корень из MSE.</p>
+<div class="formula">RMSE = √MSE</div>
+<p>Измеряется в тех же единицах, что и целевая переменная, поэтому его часто удобнее интерпретировать.</p>
+</div>
+</div>
+<p>Вычисление в Python:</p>
+<pre><code>from sklearn.metrics import mean_absolute_error, mean_squared_error
+
+mae = mean_absolute_error(y_test, pred)
+mse = mean_squared_error(y_test, pred)
+rmse = np.sqrt(mse)</code></pre>
+<div class="note"><strong>Какую метрику считать хорошей?</strong> Это зависит от задачи и масштаба целевой переменной. Например, ошибка в 10 единиц может быть большой для одной задачи и почти незаметной для другой. Поэтому метрики нужно интерпретировать в контексте данных и сравнивать с базовым уровнем.</div>
+<div class="lr-check"><strong>На одном примере.</strong> Истинные продажи — 20 тыс., прогноз — 17 тыс. Тогда остаток = +3 тыс.; абсолютная ошибка = 3; квадратичная ошибка = 9. Усреднение таких ошибок по всем объектам даёт MAE и MSE, а корень из MSE — RMSE.</div>
+<p><strong>Практическое сравнение:</strong> MAE удобно объяснять как типичную абсолютную ошибку; RMSE сильнее реагирует на редкие крупные промахи. Обе метрики имеют единицы <code>sales</code>, а MSE — квадрат этих единиц. При сравнении моделей обязательно используем одну и ту же тестовую выборку.</p></section>
+<section class="card" id="residuals">
+<span class="tag">Диагностика модели</span>
+<h2>6. Остатки (Residuals)</h2>
+<p><strong>Остаток</strong> — разность между истинным значением и предсказанием модели:</p>
+<div class="formula">eᵢ = yᵢ − ŷᵢ</div>
+<p>Остатки помогают понять, <em>как именно</em> модель ошибается. Две модели могут иметь похожую метрику, но совершенно разную структуру ошибок.</p>
+<figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Вертикальное расстояние от наблюдения до предсказанного моделью значения — остаток." id="regressionResiduals" role="img"></canvas></div>
+
+<figcaption>Вертикальное расстояние от наблюдения до предсказанного моделью значения — остаток.</figcaption>
+</figure>
+<div class="warning"><strong>Важное различие:</strong> остаток обычно считают как <code>y_true - y_pred</code>. Если поменять порядок вычитания, знак изменится, хотя абсолютная ошибка останется той же.</div>
+<p>В примере с тестовой выборкой:</p>
+<pre><code>residuals = y_test - pred</code></pre>
+<p>Если <code>e &gt; 0</code>, модель <strong>недооценила</strong> продажу; если <code>e &lt; 0</code> — <strong>переоценила</strong>. Важно смотреть не только на средний остаток: положительные и отрицательные ошибки могут взаимно компенсироваться.</p></section>
+<section class="card" id="diagnostics"><span class="tag">Графический анализ</span><h2>7. Диагностика: что говорят остатки</h2>
+<p>В рукописном конспекте важная мысль: <strong>одного числа MAE или RMSE мало</strong>. На графиках можно заметить закономерности, которые агрегированная метрика скрывает. Ниже схематичные иллюстрации, а не результаты обучения на реальном датасете.</p>
+<h3>7.1. Графики остатков: четыре типичных картины</h3><div class="lr-plot-grid"><div><figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Случайное облако · учебная схема" id="residualRandom" role="img"></canvas></div><figcaption>Случайное облако · учебная схема</figcaption></figure><h4>Хороший ориентир</h4><p>Точки разбросаны вокруг нуля без очевидной формы. Это не доказательство идеальной модели, но явных проблем на этом графике не видно.</p></div><div><figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Дуга / U-образный рисунок · учебная схема" id="residualCurve" role="img"></canvas></div><figcaption>Дуга / U-образный рисунок · учебная схема</figcaption></figure><h4>Признак нелинейной связи</h4><p>Ошибки зависят от значения прогноза: прямой может не хватать, чтобы уловить зависимость. Стоит проверить форму связи и признаки.</p></div><div><figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Расширяющаяся воронка · учебная схема" id="residualFunnel" role="img"></canvas></div><figcaption>Расширяющаяся воронка · учебная схема</figcaption></figure><h4>Неодинаковый разброс ошибок</h4><p>По мере роста прогноза увеличивается разброс остатков (гетероскедастичность). Ошибки в разных диапазонах имеют разный масштаб.</p></div><div><figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Один сильный выброс · учебная схема" id="residualOutlier" role="img"></canvas></div><figcaption>Один сильный выброс · учебная схема</figcaption></figure><h4>Аномальное наблюдение</h4><p>Большая ошибка одного объекта может ощутимо изменить MSE и RMSE. Проверь объект, а не удаляй его автоматически.</p></div></div><p>В частности, <strong>систематическая дуга</strong> на графике остатков подсказывает, что линейная модель не до конца описывает зависимость. В конспекте также отмечается: структуру остатков следует рассматривать относительно предсказаний или истинных значений и сравнивать с линией нуля.</p>
+<p class="code-label">Как построить график для своих данных</p><pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+
+residuals = y_test - pred
+sns.scatterplot(x=pred, y=residuals)
+plt.axhline(0, color="red", linestyle="--")
+plt.xlabel("Предсказанные продажи, ŷ")
+plt.ylabel("Остатки (y − ŷ)")
+plt.title("Остатки против предсказаний")
+plt.show()</code></pre>
+<h3>7.2. Распределение остатков</h3><p>Гистограмма показывает, где сосредоточены ошибки, есть ли смещение, асимметрия и тяжёлые хвосты. В лекции ориентир — распределение примерно вокруг нуля. Но <strong>нормальность остатков не обязательна для самого построения прогноза</strong>; она особенно важна для некоторых статистических выводов и интервалов в классической модели.</p>
+<pre><code>sns.displot(residuals, bins=25, kde=True)
+plt.xlabel("Остаток (y − ŷ)")
+plt.show()</code></pre><figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Схема распределения остатков: центр вблизи нуля, не фактический результат на данных Advertising" id="residualHistogram" role="img"></canvas></div><figcaption>Схема распределения остатков: центр вблизи нуля, не фактический результат на данных Advertising</figcaption></figure><h3>7.3. Normal Probability Plot (Q–Q plot)</h3>
+<p>Q–Q plot сравнивает <strong>квантили наблюдаемых остатков</strong> с теоретическими квантилями нормального распределения. Если точки приблизительно лежат на прямой, нормальное распределение является правдоподобным приближением. Если график заметно изгибается или его концы расходятся с прямой, распределение может отличаться от нормального.</p><div class="lr-plot-grid"><figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Остатки близки к нормальному распределению · схематично" id="qqNormal" role="img"></canvas></div><figcaption>Остатки близки к нормальному распределению · схематично</figcaption></figure><figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Есть отклонения от нормального распределения · схематично" id="qqDeviated" role="img"></canvas></div><figcaption>Есть отклонения от нормального распределения · схематично</figcaption></figure></div><pre><code>from scipy import stats
+
+fig, ax = plt.subplots(figsize=(6, 6))
+stats.probplot(residuals, dist="norm", plot=ax)
+ax.set_title("Q–Q plot остатков")
+plt.show()</code></pre>
+<div class="note"><strong>Как читать три графика вместе:</strong> scatterplot ищет структуру ошибки, гистограмма показывает её форму, Q–Q plot детальнее проверяет соответствие нормальному распределению. Нормальность сама по себе не гарантирует ни хорошего прогноза, ни корректности всех предположений модели.</div>
+<h3>7.4. Квартет Энскомба — почему графики обязательны</h3>
+<p>Квартет Энскомба состоит из четырёх наборов точек с почти одинаковыми средними, дисперсиями, корреляцией и линейной регрессией. Но их <strong>геометрия принципиально отличается</strong>. Поэтому метрики и коэффициенты без графика могут вводить в заблуждение.</p><div class="lr-plot-grid"><figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Набор 1. Обычная линейная зависимость" id="anscombe1" role="img"></canvas></div><figcaption><strong>Набор 1.</strong> Обычная линейная зависимость</figcaption></figure><figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Набор 2. Явная нелинейность" id="anscombe2" role="img"></canvas></div><figcaption><strong>Набор 2.</strong> Явная нелинейность</figcaption></figure><figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Набор 3. Один влиятельный выброс" id="anscombe3" role="img"></canvas></div><figcaption><strong>Набор 3.</strong> Один влиятельный выброс</figcaption></figure><figure class="diagram lr-chart-figure"><div class="lr-chart-box"><canvas aria-label="Набор 4. Почти все x одинаковые" id="anscombe4" role="img"></canvas></div><figcaption><strong>Набор 4.</strong> Почти все x одинаковые</figcaption></figure></div><div class="lr-check"><strong>Что объединяет 4 набора?</strong> Для каждого среднее <code>x ≈ 9</code>, среднее <code>y ≈ 7.5</code>, коэффициент корреляции <code>r ≈ 0.816</code>, а линия регрессии близка к <code>ŷ = 3 + 0.5x</code>. Тем не менее доверять одной прямой для всех четырёх картинок было бы ошибкой.</div>
+<p class="code-label">Готовая диагностика на своём датасете</p><pre><code># Остатки после model.fit(X_train, y_train) и model.predict(X_test)
+residuals = y_test - pred
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+sns.scatterplot(x=pred, y=residuals, ax=axes[0])
+axes[0].axhline(0, color="red", linestyle="--")
+axes[0].set(xlabel="Предсказания", ylabel="Остатки", title="Остатки")
+sns.histplot(residuals, bins=25, kde=True, ax=axes[1])
+axes[1].set(title="Распределение остатков")
+stats.probplot(residuals, plot=axes[2])
+axes[2].set_title("Q–Q plot")
+plt.tight_layout()
+plt.show()</code></pre></section>
+<section class="card" id="final">
+<span class="tag">После проверки</span>
+<h2>8. Повторное обучение на всех данных</h2>
+<p>Если качество на тестовой выборке устраивает, перед использованием модели её можно обучить заново на всех доступных данных.</p>
+<pre><code>final_model = LinearRegression()
+final_model.fit(X, y)</code></pre>
+<div class="warning"><strong>После этого нельзя использовать метрику на тех же данных как честную оценку качества.</strong> Финальная модель уже видела все объекты, поэтому ошибка на них будет оценкой на обучающих данных, а не на независимой выборке.</div>
+<p>Если качество на тесте не устраивает, можно вернуться к выбору модели или настройкам. В рамках следующей темы курса рассматривается регуляризация.</p>
+<p>Логика такая: <strong>сначала</strong> оцениваем качество на отложенном тесте, принимаем решение о подходящем подходе и лишь <strong>потом</strong> переобучаем выбранную конфигурацию на всех доступных строках. Если неоднократно подбирать модель по тестовой метрике, тест перестаёт быть действительно независимой проверкой; для выбора гиперпараметров стоит использовать валидацию или кросс-валидацию.</p></section>
+<section class="card" id="coefficients">
+<span class="tag">Интерпретация</span>
+<h2>9. Коэффициенты модели</h2>
+<p>У линейной регрессии есть коэффициенты при признаках. В Scikit-learn их можно получить через атрибут <code>.coef_</code>.</p>
+<pre><code>final_model.coef_
+
+coefficients = pd.DataFrame(
+    final_model.coef_,
+    index=X.columns,
+    columns=["Coefficient"]
+)</code></pre>
+<p>В примере признаки идут в порядке <code>TV</code>, <code>radio</code>, <code>newspaper</code>. По смыслу коэффициент показывает, как меняется прогноз при увеличении соответствующего признака на одну единицу, <strong>если остальные признаки зафиксированы</strong>.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Признак</th><th>Коэффициент для иллюстрации (примерно)</th><th>Интерпретация</th></tr></thead>
+<tbody>
+<tr><td>TV</td><td>+0.045</td><td>При увеличении бюджета на TV на $1000 прогноз продаж увеличивается примерно на 0.045 тыс. единиц, то есть на 45 единиц.</td></tr>
+<tr><td>Radio</td><td>+0.188</td><td>При увеличении бюджета на радио на $1000 прогноз увеличивается примерно на 0.188 тыс. единиц, то есть на 188 единиц.</td></tr>
+<tr><td>Newspaper</td><td>−0.001</td><td>Коэффициент близок к нулю и в этой модели имеет небольшой отрицательный знак.</td></tr>
+</tbody>
+</table>
+</div>
+<div class="note"><strong>Осторожно с интерпретацией:</strong> коэффициент описывает связь внутри построенной модели при фиксированных остальных признаках. Его не следует автоматически трактовать как доказательство причинно-следственного эффекта.</div>
+<h3>Масштаб признаков</h3>
+<p>В этом примере все рекламные бюджеты измеряются в одинаковых единицах — тысячах долларов. В других задачах признаки могут иметь разные масштабы (например, площадь дома и число спален). Тогда для сопоставления масштабов может быть полезна нормализация или стандартизация. Это отдельная тема, которая в лекции только упоминается.</p>
+<p>Свободный член модели доступен через <code>final_model.intercept_</code>. Он задаёт предсказание при нулевых значениях всех рекламных расходов (математически, хотя практический смысл такого сценария нужно оценивать отдельно).</p>
+<pre><code>print("Свободный член:", final_model.intercept_)
+print(pd.Series(final_model.coef_, index=X.columns))</code></pre></section>
+<section class="card" id="prediction">
+<span class="tag">Практическое применение</span>
+<h2>10. Предсказание для новых данных</h2>
+<p>Для нового объекта нужно передать модели признаки в том же составе и порядке, что использовались при обучении.</p>
+<p>Пример для иллюстрации: новая рекламная кампания — TV: 149, radio: 22, newspaper: 12 (тыс. долларов).</p>
+<pre><code>campaign = pd.DataFrame(
+    [[149, 22, 12]],
+    columns=X.columns
+)
+
+prediction = final_model.predict(campaign)</code></pre>
+<div class="tip"><strong>Почему DataFrame?</strong> При обучении модель получила таблицу с именами колонок. Передача DataFrame с теми же именами помогает сохранить соответствие признаков и избежать предупреждения о несовпадении формата входных данных.</div>
+<p>Точность отдельного прогноза заранее неизвестна. Ориентироваться можно на результаты оценки модели на тестовой выборке, но это не гарантирует точность каждого конкретного предсказания.</p>
+</section>
+<section class="card" id="all-code"><span class="tag">Практика</span><h2>11. Полный рабочий пример — от CSV до проверки</h2>
+<p>Ниже все основные команды собраны в одном месте. Это самостоятельное дополнение к рукописным записям, чтобы не приходилось искать импорты и переменные по всему конспекту.</p>
+<pre><code>import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy import stats
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from joblib import dump, load
+
+# 1. Чтение данных. CSV должен содержать TV, radio, newspaper, sales.
+df = pd.read_csv("Advertising.csv")
+features = ["TV", "radio", "newspaper"]
+X = df[features]
+y = df["sales"]
+
+# 2. Разделение
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+# 3. Обучение и прогноз
+model = LinearRegression()
+model.fit(X_train, y_train)
+pred = model.predict(X_test)
+
+# 4. Качество
+mae = mean_absolute_error(y_test, pred)
+mse = mean_squared_error(y_test, pred)
+rmse = np.sqrt(mse)
+print(f"MAE: {mae:.3f}, MSE: {mse:.3f}, RMSE: {rmse:.3f}")
+
+# 5. Диагностика остатков
+residuals = y_test - pred
+fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+sns.scatterplot(x=pred, y=residuals, ax=axes[0])
+axes[0].axhline(0, color="red", linestyle="--")
+axes[0].set(xlabel="Предсказания", ylabel="Остатки")
+sns.histplot(residuals, bins=25, kde=True, ax=axes[1])
+stats.probplot(residuals, plot=axes[2])
+plt.tight_layout()
+plt.show()
+
+# 6. После оценки обучаем финальную модель на всех данных
+final_model = LinearRegression()
+final_model.fit(X, y)
+print(pd.Series(final_model.coef_, index=features))
+
+# 7. Прогноз на новую кампанию
+campaign = pd.DataFrame([[149, 22, 12]], columns=features)
+print("Прогноз продаж:", final_model.predict(campaign)[0])
+
+# 8. Сохранение модели
+dump(final_model, "sales_model.joblib")
+restored_model = load("sales_model.joblib")</code></pre>
+<div class="warning"><strong>Важное условие:</strong> значения метрик и коэффициентов зависят от версии и содержимого CSV, выбора train/test и точной постановки задачи. Код специально не подставляет невычисленные результаты.</div>
+</section><section class="card" id="save">
+<span class="tag">Сохранение модели</span>
+<h2>12. Сохранение и загрузка</h2>
+<p>Обученную модель можно сохранить на диск и затем загрузить, чтобы не обучать её заново при каждом запуске программы. В примере используется <code>joblib</code>.</p>
+<pre><code>from joblib import dump, load
+
+# Сохранение
+dump(final_model, "sales_model.joblib")
+
+# Загрузка
+loaded_model = load("sales_model.joblib")
+
+# Использование загруженной модели
+loaded_model.predict(campaign)</code></pre>
+<div class="warning"><strong>Важно:</strong> загружайте pickle/joblib-файлы только из доверенных источников. Такие файлы могут выполнять код при десериализации.</div>
+</section>
+<section class="conclusion">
+<h2>Краткий итог</h2>
+<ul>
+<li>Разделяем данные на train и test до обучения.</li>
+<li>Обучаем модель через <code>.fit()</code>, получаем прогноз через <code>.predict()</code>.</li>
+<li>Считаем MAE, MSE и RMSE на тестовой выборке.</li>
+<li>Изучаем остатки, чтобы увидеть структуру ошибок, а не только одно число метрики.</li>
+<li>Если качество устраивает, обучаем финальную модель на всех данных.</li>
+<li>Изучаем коэффициенты, делаем прогнозы для новых объектов и сохраняем модель.</li>
+</ul>
+</section>
+<p class="footer">Основа: рукописный конспект Scikit-learn (9 стр.). Дополнено пояснениями, диагностическими схемами и цельным примером кода. Схемы не являются результатом реальных вычислений.</p>
+</article>
+</div>
+<div class="nav-back-bottom-wrap">
+<a class="nav-back" href="index.html">← Вернуться к базе знаний</a>
+</div>
+</main>
+<script>document.addEventListener('DOMContentLoaded', function(){
+
+(function () {
+  'use strict';
+  // Синхронизировано с Chart.js-графиками предыдущего конспекта.
+  if (typeof Chart === 'undefined') {
+    document.querySelectorAll('.lr-chart-box').forEach(box => {
+      box.innerHTML = '<p style="padding:20px;color:var(--muted,#8b949e)">Для отображения графика требуется подключение Chart.js (интернет).</p>';
+    });
+    return;
+  }
+  const C={blue:'#58a6ff',green:'#3fb950',orange:'#f0883e',red:'#f85149',muted:'#8b949e',grid:'#30363d',light:'#f0f6fc',purple:'#bc8cff'};
+  Chart.defaults.color=C.muted;
+  Chart.defaults.borderColor=C.grid;
+  Chart.defaults.font.family='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif';
+  Chart.defaults.font.size=12;
+  const xy=(a)=>a.map(([x,y])=>({x,y}));
+  function scatter(id, data, options={}) {
+    const el=document.getElementById(id); if(!el)return;
+    return new Chart(el, {type:'scatter',data:{datasets:data},options:{responsive:true,maintainAspectRatio:false,
+      animation:false,plugins:{title:{display:true,text:options.title||'',color:C.light,font:{size:13,weight:'600'},padding:{bottom:10}},legend:{display:options.legend??false,position:'bottom'},tooltip:{mode:'nearest',intersect:false}},
+      scales:{x:{type:'linear',min:options.xMin,max:options.xMax,title:{display:true,text:options.xTitle||'Предсказания ŷ'},grid:{color:C.grid}},y:{min:options.yMin,max:options.yMax,title:{display:true,text:options.yTitle||'Остаток e'},grid:{color:C.grid}}}}});
+  }
+  function dots(label,points,color=C.blue,r=4){return {label,data:xy(points),backgroundColor:color,pointBorderColor:color,pointRadius:r,pointHoverRadius:r+2};}
+  function line(label,points,color=C.blue,dashed=false){return {type:'line',label,data:xy(points),borderColor:color,borderWidth:2,pointRadius:0,fill:false,showLine:true,tension:0,borderDash:dashed?[6,5]:[]};}
+  const baseline=(xmin,xmax)=>line('Нулевая линия',[[xmin,0],[xmax,0]],C.red,true);
+  // Вертикальные остатки: от наблюдения до прямой, как в исходном конспекте.
+  const obs=[[1,2],[2,2.1],[3,3.8],[4,3.2],[5,5.1],[6,5.4]];
+  const residualPlugin={id:'lectureResidualLines',afterDatasetsDraw(chart){
+    if(chart.canvas.id!=='regressionResiduals') return;
+    const {ctx,scales:{x,y}}=chart;ctx.save();ctx.strokeStyle=C.red;ctx.lineWidth=1.7;ctx.setLineDash([4,4]);
+    obs.forEach(([xx,yy])=>{let p=x.getPixelForValue(xx), y1=y.getPixelForValue(yy), y2=y.getPixelForValue(.8*xx+.7);ctx.beginPath();ctx.moveTo(p,y1);ctx.lineTo(p,y2);ctx.stroke();});ctx.restore();
+  }};
+  Chart.register(residualPlugin);
+  scatter('regressionResiduals',[
+    line('Линия регрессии',[[0.5,1.1],[6.5,5.9]],C.blue),dots('Наблюдения',obs,C.green,5)
+  ],{title:'Наблюдения и вертикальные остатки',xMin:0,xMax:7,yMin:0,yMax:7,xTitle:'Признак x',yTitle:'Значение y',legend:true});
+  // Четыре диагностических сюжета: один масштаб и нулевая линия.
+  const rnd=[[-1.2,0.5],[.3,-.8],[1.2,.2],[2,-.4],[2.7,.8],[3.5,-.7],[4.4,.3],[5,-.25],[5.9,.5],[6.6,-.4],[7.3,.15],[8.2,-.6],[8.8,.4],[9.5,-.1]];
+  const curve=Array.from({length:17},(_,i)=>{const x=i*.6;return [x,.095*(x-4.8)**2-1.05+Math.sin(i*2)*.14];});
+  const funnel=Array.from({length:22},(_,i)=>{const x=.35+i*.43;return [x,((i*7)%13-6)/6*(.14+x*.21)];});
+  const outlier=rnd.map(a=>a.slice());outlier[8]=[5.9,2.75];
+  for(const [id,pts,title] of [
+    ['residualRandom',rnd,'Без заметной закономерности'],['residualCurve',curve,'Нелинейность: U-образный рисунок'],
+    ['residualFunnel',funnel,'Гетероскедастичность: воронка'],['residualOutlier',outlier,'Выброс: одна крупная ошибка']]){
+    scatter(id,[baseline(0,10),dots('Остатки',pts,C.blue,4)],{title,xMin:0,xMax:10,yMin:-3.4,yMax:3.4});
+  }
+  // Гистограмма и гладкая кривая для иллюстрации формы распределения.
+  const bins=[2,4,7,11,18,24,30,26,20,14,8,4,2];
+  const labels=bins.map((_,i)=>(-3+i*.5).toFixed(1));
+  const hist=document.getElementById('residualHistogram');
+  if(hist)new Chart(hist,{type:'bar',data:{labels,datasets:[{type:'bar',label:'Частота',data:bins,backgroundColor:'rgba(88,166,255,.7)',borderColor:C.blue,borderWidth:1,barPercentage:1,categoryPercentage:1},{type:'line',label:'Сглаженная форма (условно)',data:[1,3,6,11,18,25,28,25,19,13,7,3,1],borderColor:C.orange,borderWidth:2,pointRadius:0,tension:.35,yAxisID:'y'}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{title:{display:true,text:'Распределение остатков (учебный пример)',color:C.light},legend:{position:'bottom'}},scales:{x:{title:{display:true,text:'Остаток e'},grid:{display:false},ticks:{maxTicksLimit:7}},y:{beginAtZero:true,title:{display:true,text:'Частота'},grid:{color:C.grid}}}}});
+  // Теоретические нормальные квантили и наблюдаемые квантили.
+  const quant=[-2.25,-1.7,-1.4,-1.15,-.9,-.7,-.5,-.3,-.1,.1,.3,.5,.7,.9,1.15,1.4,1.7,2.25];
+  const qGood=quant.map((x,i)=>[x,x*.9+Math.sin(i*2.25)*.09]);
+  const qBad=quant.map((x,i)=>[x,x*.72+.32*x**3]);
+  for(const [id,pts,title] of [['qqNormal',qGood,'Q–Q: близко к нормальному'],['qqDeviated',qBad,'Q–Q: тяжёлые хвосты']]){
+    scatter(id,[line('Опорная прямая',[[-2.5,-2.5],[2.5,2.5]],C.red,true),dots('Квантили',pts,C.green,4)],{title,xTitle:'Теоретические квантили',yTitle:'Квантили остатков',xMin:-2.7,xMax:2.7,yMin:-5,yMax:5});
+  }
+  // Оригинальные данные квартета Энскомба, как в предыдущем конспекте.
+  const sets=[
+    {title:'I · Примерно линейная связь',p:[[10,8.04],[8,6.95],[13,7.58],[9,8.81],[11,8.33],[14,9.96],[6,7.24],[4,4.26],[12,10.84],[7,4.82],[5,5.68]]},
+    {title:'II · Нелинейная зависимость',p:[[10,9.14],[8,8.14],[13,8.74],[9,8.77],[11,9.26],[14,8.10],[6,6.13],[4,3.10],[12,9.13],[7,7.26],[5,4.74]]},
+    {title:'III · Выброс по y',p:[[10,7.46],[8,6.77],[13,12.74],[9,7.11],[11,7.81],[14,8.84],[6,6.08],[4,5.39],[12,8.15],[7,6.42],[5,5.73]]},
+    {title:'IV · Влиятельная точка по x',p:[[8,6.58],[8,5.76],[8,7.71],[8,8.84],[8,8.47],[8,7.04],[8,5.25],[19,12.50],[8,5.56],[8,7.91],[8,6.89]]}
+  ];
+  sets.forEach((s,i)=>scatter('anscombe'+(i+1),[line('Линия регрессии',[[2,4],[20,13]],C.blue),dots('Наблюдения',s.p,C.orange,4)],{title:s.title,xTitle:'Признак x',yTitle:'Цель y',xMin:2,xMax:20,yMin:2,yMax:14}));
+})();
+
+});</script></body>
+</html>
